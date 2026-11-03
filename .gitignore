@@ -1,0 +1,8 @@
+# 실데이터·비밀: 절대 올리지 않는다 (공개 저장소)
+dist/
+.token
+.sync_state.json
+deploy.json
+# 빌드/실행 부산물
+__pycache__/
+*.pyc
