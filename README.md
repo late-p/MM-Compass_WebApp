@@ -110,7 +110,10 @@ py preview.py --demo      # 가상 데이터로 빌드 후 브라우저에 폰 �
 | `extract.py` | 포털 `meeting.html`에서 모바일용 수치 추출 (대기 인원 이름 포함·인사/휴직 이름 제외, 형식 변경 시 멈춤) |
 | `build.py` | 추출 → `dist/` 생성 (앱 껍데기 + data/*.json) |
 | `sync.py` | 포털 게시 감지 → 빌드 → (선택) 배포. `--watch`, `--check` |
-| `preview.py` | 로컬 미리보기(폰 틀) |
+| `preview.py` | 로컬 미리보기(폰 틀). `--demo` = 가상 데이터 |
+| `make_demo.py` | 체험용 가상 데이터 생성(시드 고정, 실데이터 없음) |
+| `docs/` | 체험판 빌드 결과 = GitHub Pages 공개 링크용 (`py build.py --demo`로 다시 만듦) |
+| `template/assets/` | 앱 아이콘 |
 | `template/lite.html·css·js` | 앱 화면 |
 | `template/sw.js` | 설치·오프라인. 앱=네트워크 우선, 데이터=네트워크 우선+저장본(오프라인 표시) |
 | `.token` | 비밀 주소(공유 금지) |

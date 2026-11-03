@@ -49,6 +49,7 @@ def build_data(out, nweeks, demo=False):
     if demo:
         for label, d in demo_weeks()[:nweeks]:
             p = payload(label, d)
+            p["generated"] = "demo"  # 고정값: 같은 코드면 항상 같은 결과(커밋에 불필요한 변경이 생기지 않게)
             (data_dir / f"{label}.json").write_text(json.dumps(p, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
             done.append(p)
             print(f"  - {label}: {d['week']} (가상 데이터, rev {p['rev']})")
@@ -124,9 +125,12 @@ def main():
     print("주차 데이터 변환:")
     latest = build_data(out, a.weeks, a.demo)
     version = build_shell(out)
-    (DIST / "robots.txt").write_text("User-agent: *\nDisallow: /\n", encoding="utf-8")
-    if not a.no_token:
-        (DIST / "index.html").write_text("<!doctype html><meta charset=utf-8><meta name=robots content=noindex><title>-</title>", encoding="utf-8")
+    if a.demo:   # 공개 체험판(GitHub Pages): 폴더 구조가 단순하고 실데이터 폴더(dist/)는 건드리지 않음
+        (out / ".nojekyll").write_text("", encoding="utf-8")
+    else:
+        (DIST / "robots.txt").write_text("User-agent: *\nDisallow: /\n", encoding="utf-8")
+        if not a.no_token:
+            (DIST / "index.html").write_text("<!doctype html><meta charset=utf-8><meta name=robots content=noindex><title>-</title>", encoding="utf-8")
 
     kb = (out / "index.html").stat().st_size // 1024
     dkb = (out / "data" / "latest.json").stat().st_size // 1024
