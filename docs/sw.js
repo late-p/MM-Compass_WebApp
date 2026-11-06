@@ -2,7 +2,7 @@
 //  · 앱 껍데기(index.html 등): 네트워크 우선, 실패하면 저장본  → 앱 업데이트가 바로 반영됨
 //  · 데이터(/data/*.json): 네트워크 우선(항상 최신), 실패하면 마지막으로 받은 저장본 → 오프라인에서도 마지막 데이터 표시
 //  · 데이터 저장소는 앱 버전이 바뀌어도 지우지 않음
-const V = "mmc-shell-5f100b3ba9";
+const V = "mmc-shell-13eaadd3f5";
 const DATA = "mmc-data";
 const SHELL = ["./", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 

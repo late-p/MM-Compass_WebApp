@@ -247,6 +247,21 @@ details.o>summary .m2{grid-column:1;grid-row:3;align-self:start}
 .m1 .gn{font-size:26px;font-weight:800;color:var(--brown);line-height:1.1}.m1 .gn small{font-size:12px;font-weight:700;margin-left:1px}
 
 .demo{background:#EEF4FF;border:1px solid #CFE0FA;color:#1F4E8C;border-radius:12px;padding:9px 12px;margin-bottom:6px;font-size:12.5px;line-height:1.45}
+
+.jb{font-style:normal;font-size:11px;font-weight:600;color:var(--steel);background:#E8EFF8;border-radius:999px;padding:1px 7px;margin-left:4px;white-space:nowrap}
+.jsum .l{font-size:11.5px;color:var(--muted);font-weight:600}
+.jsum .big{font-size:26px;font-weight:800;color:var(--navy)}.jsum .big small{font-size:13px;font-weight:600;color:var(--muted)}
+.jsum .jmm{margin-left:10px;color:var(--steel)}
+
+.seg2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 0}
+.seg2 button{border:1px solid #C9DAF0;background:#EEF4FC;border-radius:12px;padding:12px 8px;font-size:14.5px;font-weight:700;color:#4B5563;cursor:pointer}
+.seg2 button.on{background:#CFE0F5;border-color:#7FA8DA;color:var(--navy)}
+.jsum{margin-top:10px}
+.ps{display:block;font-size:11.5px;color:var(--muted);font-weight:500}
+.vs{margin-top:2px;font-size:12px;color:var(--muted);font-weight:600}
+.dvh{display:flex;justify-content:space-between;font-size:12.5px;font-weight:800;color:var(--navy);padding:8px 0 2px;border-top:1px solid var(--line)}.dvh:first-child{border-top:0}.dvh span{color:var(--muted);font-weight:600}
+details.rk2>summary.rk{grid-template-columns:1fr auto}
+details.rk2>.rb{margin-left:0}
 </style>
 </head>
 <body>
@@ -256,13 +271,13 @@ details.o>summary .m2{grid-column:1;grid-row:3;align-self:start}
 <div id="ptr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 11-2.6-5.9"/><path d="M20 4v5h-5"/></svg></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="sheet" hidden></div>
-<script>window.APP_VERSION="5f100b3ba9";</script>
+<script>window.APP_VERSION="13eaadd3f5";</script>
 <script>(function () {
   'use strict';
   var SCHEMA = 1, AUTO_MIN = 5, POLL_MIN = 15;
   var D = null, META = null, WEEKS = null;
   var curLabel = 'latest', lastCheck = 0, offline = false;
-  var tab = 0, sortMode = 'base', trendSel = 'all', trendMonth = null, idleAll = false, hrAll = false;
+  var tab = 0, sortMode = 'base', trendSel = 'all', trendMonth = null, hrAll = false, idleMode = 'hq';
   var LS = 'mmc:' + location.pathname;
 
   /* ---------- 유틸 ---------- */
@@ -615,30 +630,68 @@ details.o>summary .m2{grid-column:1;grid-row:3;align-self:start}
   }
 
   /* ---------- 4 대기 ---------- */
+  /* 직무 묶음: '개발 · 초급' · 'Programming' 등은 '개발'로 */
+  function jobKey(j) { return !j ? '미지정' : /개발|programming|developer/i.test(j) ? '개발' : String(j).split(/\s*[·\/]\s*/)[0]; }
+  function flatPeople(divs) {
+    var out = [];
+    divs.forEach(function (d) { d.teams.forEach(function (t) { t.people.forEach(function (p) {
+      out.push({ n: p.n, j: p.j || '', mm: p.mm, team: cleanName(t.team), div: cleanName(d.div), hq: d.hq || '', corp: d.corp });
+    }); }); });
+    return out;
+  }
+  function pRow(p, sub) {
+    return '<div class="pp"><span>' + esc(p.n) + (p.j ? ' <em class="jb">' + esc(p.j) + '</em>' : '') + (sub ? '<small class="ps">' + esc(sub) + '</small>' : '') + '</span><b>' + n(p.mm, 2) + '</b></div>';
+  }
+  function grpRow(title, sub, cnt, mm, body, chipHtml) {
+    return '<details class="rk2"><summary class="rk"><div class="n"><b>' + esc(title) + '</b><em>' + esc(sub) + '</em></div>' +
+      '<div class="v">' + n(mm, 2) + '<small> MM</small><div class="vs">' + cnt + '명' + (chipHtml || '') + '</div></div></summary><div class="rb">' + body + '</div></details>';
+  }
+  function byJob(ppl) {
+    var m = {}; ppl.forEach(function (p) { var k = jobKey(p.j), o = m[k] || (m[k] = { k: k, mm: 0, ps: [] }); o.mm += p.mm; o.ps.push(p); });
+    var arr = Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return b.mm - a.mm; });
+    return arr.map(function (g) {
+      g.ps.sort(function (a, b) { return b.mm - a.mm; });
+      return grpRow(g.k, g.k === '개발' ? '개발·Programming 등 묶음' : '직무', g.ps.length, g.mm,
+        g.ps.map(function (p) { return pRow(p, cshort(p.corp) + ' · ' + p.team); }).join(''));
+    }).join('');
+  }
+  function byHq(divs) {
+    var m = {}, order = [];
+    divs.forEach(function (d) {
+      var k = d.corp + '|' + (d.hq || ''), o = m[k];
+      if (!o) { o = m[k] = { title: d.hq || d.corp, sub: cshort(d.corp), divs: [], mm: 0, prev: 0, n: 0 }; order.push(o); }
+      o.divs.push(d); o.mm += d.mm || 0; o.prev += d.prev || 0;
+      d.teams.forEach(function (t) { o.n += t.people.length; });
+    });
+    return order.filter(function (o) { return o.mm > 0 || o.n > 0; }).sort(function (a, b) { return b.mm - a.mm; }).map(function (o) {
+      var body = o.divs.map(function (d) {
+        var tb = d.teams.map(function (t) {
+          return '<div class="tm"><b>' + esc(cleanName(t.team)) + '</b><span>' + n(t.mm, 2) + ' MM</span></div>' +
+            (t.people.length ? t.people.map(function (p) { return pRow(p); }).join('') : '<div class="pp"><span class="muted">대기 인원 없음</span></div>');
+        }).join('');
+        return '<div class="dvh">' + esc(cleanName(d.div)) + '<span>' + n(d.mm, 2) + ' MM</span></div>' + tb;
+      }).join('');
+      return grpRow(o.title, o.sub, o.n, o.mm, body, ' ' + chip(dd(o.mm, o.prev), '', 1));
+    }).join('');
+  }
   function p4() {
     var k = (D.kpi || {})['대기 MM'] || {}, tot = k.v, cs = D.corps;
     var sum = cs.reduce(function (a, c) { return a + c.idle; }, 0) || 1;
     var h = '<h2>전사 대기 · ' + esc(D.all.g.label) + ' 대비</h2><div class="card"><div class="big">' + n(tot, 1) + '<small> MM</small></div><div style="margin-top:4px">' + chip(k.d, ' MM', 2) + ' <span class="muted" style="font-size:12.5px">' + esc(k.label || '') + ' ' + n(k.prev, 1) + ' · 대기율 ' + n(D.T ? tot / D.T * 100 : null, 1) + '%</span></div>';
     h += '<div class="split">' + cs.map(function (c) { return '<i style="width:' + (c.idle / sum * 100).toFixed(1) + '%"></i>'; }).join('') + '</div>';
     h += '<div class="lg2">' + cs.map(function (c, i) { return '<span><i style="background:' + (i ? '#7FA8DA' : 'var(--steel)') + '"></i>' + esc(cshort(c.name)) + ' <b>' + n(c.idle, 1) + '</b>MM</span>'; }).join('') + '</div></div>';
-    var I = D.idle || { divs: [], prev: '' };
-    var us = I.divs.filter(function (x) { return (x.mm || 0) > 0; }).sort(function (p, q) { return q.mm - p.mm; });
-    var N0 = 3, show = idleAll ? us : us.slice(0, N0);
-    h += '<h2>대기 많은 조직 TOP ' + (idleAll ? us.length : Math.min(N0, us.length)) + ' · ' + esc(I.prev || '전월') + ' 대비 (누르면 팀·인원)</h2><div class="card" style="padding-top:6px;padding-bottom:6px">';
-    h += show.length ? show.map(idleRow).join('') : '<div class="empty">대기 인력이 없어요</div>';
-    h += '</div>' + (us.length > N0 ? '<button class="more" id="idlemore">' + (idleAll ? '상위 ' + N0 + '개만 보기' : '전체 ' + us.length + '개 보기') + '</button>' : '');
-    h += '<p class="foot">대기 인원은 이름과 MM만 보여줘요 · 투입 프로젝트 등 상세는 PC 포털 회의용 화면에서 확인하세요</p>';
+    var I = D.idle || { divs: [], prev: '' }, ppl = flatPeople(I.divs);
+    var tm = ppl.reduce(function (a, p) { return a + p.mm; }, 0), hasJob = ppl.some(function (p) { return p.j; });
+    if (!hasJob && idleMode === 'job') idleMode = 'hq';
+    var dev = ppl.filter(function (p) { return jobKey(p.j) === '개발'; });
+    h += '<div class="card jsum"><div class="l">전체 대기 인원 · 총 공수 <span class="muted">(개인별 합)</span></div><div class="big">' + ppl.length + '<small> 명</small> <span class="jmm">' + n(tm, 2) + '<small> MM</small></span></div>' +
+      (hasJob ? '<div class="muted" style="font-size:12.5px;margin-top:2px">그중 개발 직무 ' + dev.length + '명 · ' + n(dev.reduce(function (a, p) { return a + p.mm; }, 0), 2) + ' MM</div>' : '') + '</div>';
+    h += '<div class="seg2" id="idlemode"><button data-m="hq"' + (idleMode === 'hq' ? ' class="on"' : '') + '>본부별 조회</button>' +
+      (hasJob ? '<button data-m="job"' + (idleMode === 'job' ? ' class="on"' : '') + '>직무별 조회</button>' : '') + '</div>';
+    h += '<h2>' + (idleMode === 'job' ? '직무별 대기 · 항목을 누르면 인원' : '본부별 대기 · ' + esc(I.prev || '전월') + ' 대비 (누르면 사업부·팀·인원)') + '</h2>';
+    h += '<div class="card" style="padding-top:6px;padding-bottom:6px">' + (ppl.length ? (idleMode === 'job' ? byJob(ppl) : byHq(I.divs)) : '<div class="empty">대기 인력이 없어요</div>') + '</div>';
+    h += '<p class="foot">대기 인원은 이름·직무·MM만 보여줘요 · 투입 프로젝트 등 상세는 PC 포털 회의용 화면에서 확인하세요</p>';
     return h;
-  }
-  function idleRow(x, i) {
-    var mis = false, body = x.teams.map(function (t) {
-      var bad = Math.abs(t.diff || 0) > 0.05; if (bad) mis = true;
-      return '<div class="tm"><b>' + esc(cleanName(t.team)) + '</b><span>' + n(t.mm, 2) + ' MM' + (bad ? ' *' : '') + '</span></div>' +
-        (t.people.length ? t.people.map(function (p) { return '<div class="pp"><span>' + esc(p.n) + '</span><b>' + n(p.mm, 2) + '</b></div>'; }).join('') : '<div class="pp"><span class="muted">대기 인원 없음</span></div>');
-    }).join('');
-    return '<details class="rk2"><summary class="rk"><div class="no' + (i < 3 ? ' t' : '') + '">' + (i + 1) + '</div><div class="n"><b>' + esc(cleanName(x.div)) + '</b><em>' + esc(cshort(x.corp)) + (x.hq ? ' · ' + esc(x.hq) : '') + '</em></div>' +
-      '<div class="v">' + n(x.mm, 2) + '<small> MM</small><div style="margin-top:2px">' + chip(dd(x.mm, x.prev), '', 1) + '</div></div></summary>' +
-      '<div class="rb">' + body + (mis ? '<div class="nt">* 팀 합계는 조직 단위 계산값이라 개인 값의 합과 다를 수 있어요</div>' : '') + '</div></details>';
   }
 
   /* ---------- 5 인사 ---------- */
@@ -680,7 +733,9 @@ details.o>summary .m2{grid-column:1;grid-row:3;align-self:start}
       b.onclick = function () { sortMode = b.getAttribute('data-m'); var y = window.scrollY; $('.pg[data-i="1"]').innerHTML = p2(); bind(); window.scrollTo(0, y); };
     });
     var ts = $('#tsel'); if (ts) { ts.value = trendSel; ts.onchange = function () { trendSel = ts.value; trendMonth = null; drawTrend(); }; drawTrend(); }
-    var im = $('#idlemore'); if (im) im.onclick = function () { idleAll = !idleAll; var y = window.scrollY; $('.pg[data-i="3"]').innerHTML = p4(); bind(); window.scrollTo(0, y); };
+    [].forEach.call(document.querySelectorAll('#idlemode button'), function (b) {
+      b.onclick = function () { idleMode = b.getAttribute('data-m'); var y = window.scrollY; $('.pg[data-i="3"]').innerHTML = p4(); bind(); window.scrollTo(0, y); };
+    });
     var hm = $('#hrmore'); if (hm) hm.onclick = function () { hrAll = !hrAll; var y = window.scrollY; $('.pg[data-i="4"]').innerHTML = p5(); bind(); window.scrollTo(0, y); };
   }
 

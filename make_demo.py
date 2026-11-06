@@ -17,6 +17,16 @@ CORPS = [
         ("테크본부", [("모바일사업부", ["앱팀", "웹팀"]), ("임베디드사업부", ["펌웨어팀", "하드웨어팀"])]),
     ]),
 ]
+SUR = "김이박최정강조윤장임한오서신권황안송류홍"
+GIV = ["민준","서연","지호","하은","도윤","수아","시우","지민","예준","서윤","주원","채원","현우","지우","건우","유진","선우","다은","준서","소율","태윤","나윤","재원","하린","승민"]
+JOBS = ["개발 · 초급", "개발 · 중급", "개발 · 고급", "Programming", "PM", "PL", "아키텍트", "QA", "DBA", "운영 · 중급", "기획", "디자인"]
+
+
+def _person(k):
+    """가상 이름·직무 (난수를 쓰지 않아 기존 수치·시드 결과에 영향 없음)"""
+    return SUR[(k * 7) % len(SUR)] + GIV[(k * 11 + k // 20) % len(GIV)], JOBS[(k * 5 + k // 12) % len(JOBS)]
+
+
 CM = 10          # 당월 인덱스(0부터) = 11월
 TARGET = 80.0
 
@@ -57,7 +67,8 @@ def _team(rng, name, cn, counter):
         v = 0.0 if r < 0.85 else (1.0 if r < 0.93 else rng.choice([0.25, 0.5, 0.52, 0.76]))
         if v > 0:
             counter[0] += 1
-            people.append({"n": f"구성원 {counter[0]:02d}", "mm": round(v, 2)})
+            nm, jb = _person(counter[0])
+            people.append({"n": nm, "j": jb, "mm": round(v, 2)})
         idle_now += v
     T = float(m)
     idle_prev = max(0.0, idle_now + rng.uniform(-2.2, 2.2))

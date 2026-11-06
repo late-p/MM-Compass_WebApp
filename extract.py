@@ -51,7 +51,7 @@ def _cmp(label_prev, delta):
 
 def _idle_detail(sl):
     """대기 인력 페이지 → 사업부별 {법인, 본부, 사업부, 전월/당월 대기MM, 팀[{팀, MM, 인원[{이름, MM}]}]}
-    사람 행: data-b = 당월 대기 MM(소수 4자리). 당월 대기가 0인 사람(퇴사·이미 투입 등)은 뺀다.
+    사람 행: data-b = 당월 대기 MM(소수 4자리), 세 번째 칸 = 직무(없으면 ''). 당월 대기가 0인 사람(퇴사·이미 투입 등)은 뺀다.
     ※ 이 데이터에는 대기 인원의 '이름'이 들어간다 (요청에 따라 대기 상세에만)."""
     sl = re.sub(r"<svg.*?</svg>", "", sl, flags=re.S)
     marks = [(m.start(), m.group(1)) for m in re.finditer(r'<details class="(cb|ib|dvb)"', sl)]
@@ -90,9 +90,11 @@ def _idle_detail(sl):
                 elif cur is not None:
                     for row in re.findall(r"<tr data-a[^>]*>.*?</tr>", part, re.S):
                         b = re.search(r'data-b="([-\d.]+)"', row)
-                        nmc = re.search(r'<td class="l">(.*?)</td>', row, re.S)
-                        if b and nmc and float(b.group(1)) > 0.004:
-                            cur["people"].append({"n": _txt(nmc.group(1)), "mm": round(float(b.group(1)), 2)})
+                        cells = re.findall(r'<td class="l">(.*?)</td>', row, re.S)  # 성명 · 소속 · 직무 · 직급 …
+                        if b and cells and float(b.group(1)) > 0.004:
+                            job = _txt(cells[2]) if len(cells) > 2 else ""
+                            cur["people"].append({"n": _txt(cells[0]), "mm": round(float(b.group(1)), 2),
+                                                  "j": "" if job in ("", "—", "-") else job})
             for t in teams:  # 팀 합계(엔진 계산)와 개인 합이 다른지 표시
                 t["diff"] = round(sum(p["mm"] for p in t["people"]) - t["mm"], 2)
                 t["people"].sort(key=lambda p: -p["mm"])
