@@ -31,9 +31,9 @@ self.addEventListener("fetch", e => {
     return;
   }
   if (r.mode === "navigate" || r.destination === "document") {
-    e.respondWith(fetch(r).then(res => { const cp = res.clone(); caches.open(V).then(c => c.put("./", cp)); return res; })
+    e.respondWith(fetch(r).then(res => { if (res.ok) { const cp = res.clone(); caches.open(V).then(c => c.put("./", cp)); } return res; })
       .catch(() => caches.match("./")));
     return;
   }
-  e.respondWith(caches.match(r).then(h => h || fetch(r).then(res => { const cp = res.clone(); caches.open(V).then(c => c.put(r, cp)); return res; })));
+  e.respondWith(caches.match(r).then(h => h || fetch(r).then(res => { if (res.ok) { const cp = res.clone(); caches.open(V).then(c => c.put(r, cp)); } return res; })));
 });

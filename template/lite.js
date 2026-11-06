@@ -8,7 +8,7 @@
 
   /* ---------- 유틸 ---------- */
   function $(s, e) { return (e || document).querySelector(s); }
-  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function n(v, k) { return (v == null || isNaN(v)) ? '–' : (+v).toFixed(k == null ? 1 : k); }
   function sg(d) { return d > 0.004 ? 'up' : d < -0.004 ? 'dn' : 'fl'; }
   function chip(d, unit, k) {
@@ -446,7 +446,7 @@
       ? '<div class="past"><span>지난 주차를 보고 있어요</span><button id="tolatest">최신 보기</button></div>' : '';
     var pages = [p1, p2, p3, p4, p5];
     $('#main').innerHTML = pages.map(function (f, i) {
-      var html = ''; try { html = f(); } catch (e) { html = '<div class="err"><b>이 화면을 표시하지 못했어요</b>' + esc(e.message) + '</div>'; if (window.console) console.error(e); }
+      var html = ''; try { html = f(); } catch (e) { html = '<div class="err"><b>이 화면을 표시하지 못했어요</b>잠시 후 다시 시도해 주세요.</div>'; if (window.console) console.error(e); }
       return '<section class="pg" data-i="' + i + '">' + (i === 0 ? past : '') + html + '</section>';
     }).join('');
     go(tab, true);

@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>MM-Compass 회의용</title>
 <meta name="theme-color" content="#0F2942">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -271,7 +273,7 @@ details.rk2>.rb{margin-left:0}
 <div id="ptr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 11-2.6-5.9"/><path d="M20 4v5h-5"/></svg></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="sheet" hidden></div>
-<script>window.APP_VERSION="13eaadd3f5";</script>
+<script>window.APP_VERSION="26f58b01c9";</script>
 <script>(function () {
   'use strict';
   var SCHEMA = 1, AUTO_MIN = 5, POLL_MIN = 15;
@@ -282,7 +284,7 @@ details.rk2>.rb{margin-left:0}
 
   /* ---------- 유틸 ---------- */
   function $(s, e) { return (e || document).querySelector(s); }
-  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function n(v, k) { return (v == null || isNaN(v)) ? '–' : (+v).toFixed(k == null ? 1 : k); }
   function sg(d) { return d > 0.004 ? 'up' : d < -0.004 ? 'dn' : 'fl'; }
   function chip(d, unit, k) {
@@ -720,7 +722,7 @@ details.rk2>.rb{margin-left:0}
       ? '<div class="past"><span>지난 주차를 보고 있어요</span><button id="tolatest">최신 보기</button></div>' : '';
     var pages = [p1, p2, p3, p4, p5];
     $('#main').innerHTML = pages.map(function (f, i) {
-      var html = ''; try { html = f(); } catch (e) { html = '<div class="err"><b>이 화면을 표시하지 못했어요</b>' + esc(e.message) + '</div>'; if (window.console) console.error(e); }
+      var html = ''; try { html = f(); } catch (e) { html = '<div class="err"><b>이 화면을 표시하지 못했어요</b>잠시 후 다시 시도해 주세요.</div>'; if (window.console) console.error(e); }
       return '<section class="pg" data-i="' + i + '">' + (i === 0 ? past : '') + html + '</section>';
     }).join('');
     go(tab, true);

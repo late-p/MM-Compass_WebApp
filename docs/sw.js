@@ -2,7 +2,7 @@
 //  · 앱 껍데기(index.html 등): 네트워크 우선, 실패하면 저장본  → 앱 업데이트가 바로 반영됨
 //  · 데이터(/data/*.json): 네트워크 우선(항상 최신), 실패하면 마지막으로 받은 저장본 → 오프라인에서도 마지막 데이터 표시
 //  · 데이터 저장소는 앱 버전이 바뀌어도 지우지 않음
-const V = "mmc-shell-13eaadd3f5";
+const V = "mmc-shell-26f58b01c9";
 const DATA = "mmc-data";
 const SHELL = ["./", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
@@ -31,9 +31,9 @@ self.addEventListener("fetch", e => {
     return;
   }
   if (r.mode === "navigate" || r.destination === "document") {
-    e.respondWith(fetch(r).then(res => { const cp = res.clone(); caches.open(V).then(c => c.put("./", cp)); return res; })
+    e.respondWith(fetch(r).then(res => { if (res.ok) { const cp = res.clone(); caches.open(V).then(c => c.put("./", cp)); } return res; })
       .catch(() => caches.match("./")));
     return;
   }
-  e.respondWith(caches.match(r).then(h => h || fetch(r).then(res => { const cp = res.clone(); caches.open(V).then(c => c.put(r, cp)); return res; })));
+  e.respondWith(caches.match(r).then(h => h || fetch(r).then(res => { if (res.ok) { const cp = res.clone(); caches.open(V).then(c => c.put(r, cp)); } return res; })));
 });

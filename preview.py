@@ -3,7 +3,8 @@ r"""MM-Compass 웹앱 로컬 미리보기
   py preview.py            빌드 → 이 PC에서만 열리는 서버 실행 → 브라우저에 '폰 화면 틀'로 열기
   py preview.py --no-build 빌드 없이 실행
   py preview.py --demo     가상 샘플 데이터 체험판으로 실행 (포털·실데이터 없이도 동작)
-  py preview.py --lan      같은 와이파이의 실제 폰에서도 열기 (HTTP라 설치는 안 됨, 화면 확인용 / 같은 망 누구나 접속 가능하니 확인 후 끄세요)
+  py preview.py --demo --lan   같은 와이파이의 실제 폰에서도 열기 (HTTP라 설치는 안 됨, 화면 확인용 / 같은 망 누구나 접속 가능하니 확인 후 끄세요)
+  py preview.py --lan --allow-real-lan   실데이터를 사내망에 열기 (인증 없음·HTTP, 명시 동의 필요)
 
 주소: http://localhost:8811/phone   (폰 크기 틀)   ·   앱 자체 주소는 빌드 마지막 줄 참고
 """
@@ -77,6 +78,8 @@ def main():
     apps = sorted(p.name for p in DIST.glob("m-*") if p.is_dir())
     H.app_path = "/" if DEMO else (f"/{apps[0]}/" if apps else "/")
     host = "0.0.0.0" if "--lan" in sys.argv else "127.0.0.1"
+    if host == "0.0.0.0" and not DEMO and "--allow-real-lan" not in sys.argv:
+        sys.exit("실데이터를 사내망에 여는 것은 막아 두었습니다(인증 없음·HTTP).\n  가상 데이터로 확인하려면: py preview.py --demo --lan\n  실데이터를 정말 열려면(확인 후 즉시 끄기): py preview.py --lan --allow-real-lan")
     srv = ThreadingHTTPServer((host, PORT), partial(H, directory=str(DIST)))
     url = f"http://localhost:{PORT}/phone"
     print(f"\n미리보기 실행 중: {url}\n끄려면 이 창을 닫거나 Ctrl+C")
